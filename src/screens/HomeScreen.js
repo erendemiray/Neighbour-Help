@@ -27,12 +27,16 @@ export default function HomeScreen() {
     // 2. Firestore'daki Aktif İlanları Dinle
     const q = query(collection(db, "requests"), where("status", "==", "active"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const docs = [];
-      querySnapshot.forEach((doc) => {
-        docs.push({ id: doc.id, ...doc.data() });
-      });
-      setRequests(docs);
-    });
+  const docs = [];
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    console.log("Gelen İlan:", data); // Terminale bak, ilanlar geliyor mu?
+    docs.push({ id: doc.id, ...data });
+  });
+  setRequests(docs);
+}, (error) => {
+  console.error("Firestore Hatası:", error);
+});
 
     return () => unsubscribe(); // Sayfa kapandığında dinlemeyi durdur
   }, []);

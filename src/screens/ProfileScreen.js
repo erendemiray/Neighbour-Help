@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { Avatar, Title, Caption, Button, Card, List } from 'react-native-paper';
+import { Avatar, Title, Caption, Button, List } from 'react-native-paper';
 import { auth } from '../services/firebaseConfig';
 import { signOut } from 'firebase/auth';
 
-export default function ProfileScreen() {
+// navigation parametresini ekledik
+export default function ProfileScreen({ navigation }) {
   const user = auth.currentUser;
 
   const handleLogout = () => {
@@ -20,7 +21,6 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Profil Başlık Kısmı */}
       <View style={styles.userInfoSection}>
         <View style={{ flexDirection: 'row', marginTop: 15 }}>
           <Avatar.Text 
@@ -36,7 +36,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* İstatistikler veya Bilgiler */}
       <View style={styles.infoBoxWrapper}>
         <View style={[styles.infoBox, { borderRightColor: '#dddddd', borderRightWidth: 1 }]}>
           <Title>0</Title>
@@ -48,12 +47,12 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Menü Seçenekleri */}
       <View style={styles.menuWrapper}>
         <List.Item
           title="Yardım İsteklerim"
           left={props => <List.Icon {...props} icon="history" />}
-          onPress={() => {}}
+          // Burayı güncelledik, MyRequests sayfasına yönlendiriyor
+          onPress={() => navigation.navigate('MyRequests')} 
         />
         <List.Item
           title="Ayarlar"
