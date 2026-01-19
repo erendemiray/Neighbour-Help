@@ -1,22 +1,22 @@
-import { initializeApp } from "firebase/app";
-import { initializeAuth, getAuth, getApps } from "firebase/auth";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getReactNativePersistence } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCZe-e9mEvX3-9Rh6ENsy2-w5uumjNwZrE",
+  authDomain: "neigbourhelp-75c1c.firebaseapp.com",
+  projectId: "neigbourhelp-75c1c",
+  storageBucket: "neigbourhelp-75c1c.firebasestorage.app",
+  messagingSenderId: "844833593686",
+  appId: "1:844833593686:web:a104ad2386793114bd9ef7",
+  measurementId: "G-HCW5P6PGSR"
 };
 
-// Firebase'i başlat
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Uygulamayı başlatırken hata almamak için kontrol yapıyoruz
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Auth ve Firestore referanslarını dışa aktar
+// Auth ve Firestore referanslarını dışa aktaralım
 export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
