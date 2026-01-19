@@ -51,13 +51,7 @@ export default function ProfileScreen({ navigation }) {
         <List.Item
           title="Yardım İsteklerim"
           left={props => <List.Icon {...props} icon="history" />}
-          // Burayı güncelledik, MyRequests sayfasına yönlendiriyor
           onPress={() => navigation.navigate('MyRequests')} 
-        />
-        <List.Item
-          title="Ayarlar"
-          left={props => <List.Icon {...props} icon="cog" />}
-          onPress={() => {}}
         />
         <Button 
           mode="contained" 

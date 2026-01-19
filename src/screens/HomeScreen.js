@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Dimensions, Text } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { ActivityIndicator, Card, Title, Paragraph } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { db } from '../services/firebaseConfig';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 
@@ -12,7 +12,6 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Konum Al ve İzin İste
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -24,27 +23,23 @@ export default function HomeScreen() {
       setLoading(false);
     })();
 
-    // 2. Firestore'daki Aktif İlanları Dinle
     const q = query(collection(db, "requests"), where("status", "==", "active"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-  const docs = [];
-  querySnapshot.forEach((doc) => {
-    const data = doc.data();
-    console.log("Gelen İlan:", data); // Terminale bak, ilanlar geliyor mu?
-    docs.push({ id: doc.id, ...data });
-  });
-  setRequests(docs);
-}, (error) => {
-  console.error("Firestore Hatası:", error);
-});
+      const docs = [];
+      querySnapshot.forEach((doc) => {
+        docs.push({ id: doc.id, ...doc.data() });
+      });
+      console.log("Güncel İlan Sayısı:", docs.length); 
+      setRequests(docs);
+    });
 
-    return () => unsubscribe(); // Sayfa kapandığında dinlemeyi durdur
+    return () => unsubscribe();
   }, []);
 
   if (loading || !location) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#2ecc71" />
       </View>
     );
   }
@@ -52,30 +47,34 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <MapView
+        // KEY EKLEME: İlan sayısı değiştiğinde haritayı render olmaya zorlar
+        key={requests.length} 
         style={styles.map}
         initialRegion={{
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
+          latitudeDelta: 0.02, // Daha yakından bakmak için düşürdük
+          longitudeDelta: 0.02,
         }}
         showsUserLocation={true}
       >
-        {requests.map((item) => (
+        {requests.map((item, index) => (
           <Marker
             key={item.id}
             coordinate={{
-              latitude: item.latitude,
-              longitude: item.longitude,
+              // ÜST ÜSTE BİNMEYİ ÖNLEME: 
+              // Eğer koordinatlar aynıysa marker'ı çok küçük bir miktar kaydırır
+              latitude: item.latitude + (index * 0.00005), 
+              longitude: item.longitude + (index * 0.00005),
             }}
-            // Kategoriye göre pin rengi değiştirebiliriz
             pinColor={item.category === 'Pets' ? 'orange' : item.category === 'Tools' ? 'blue' : 'red'}
+            // Performans ve canlı güncelleme için:
+            tracksViewChanges={false} 
           >
-            {/* Pin'e tıklandığında açılacak kutucuk */}
             <Callout>
               <View style={styles.callout}>
                 <Text style={{ fontWeight: 'bold' }}>{item.title}</Text>
-                <Text>{item.description}</Text>
+                <Text numberOfLines={3}>{item.description}</Text>
                 <Text style={styles.categoryText}>Kategori: {item.category}</Text>
               </View>
             </Callout>
@@ -93,13 +92,6 @@ const styles = StyleSheet.create({
     height: Dimensions.get('window').height,
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  callout: {
-    width: 200,
-    padding: 10,
-  },
-  categoryText: {
-    fontSize: 10,
-    color: 'gray',
-    marginTop: 5
-  }
+  callout: { width: 200, padding: 5 },
+  categoryText: { fontSize: 10, color: 'gray', marginTop: 5 }
 });

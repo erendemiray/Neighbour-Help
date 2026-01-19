@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
-import { List, Text, ActivityIndicator, Divider } from 'react-native-paper';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
+import { List, Text, ActivityIndicator, Divider, IconButton } from 'react-native-paper';
 import { db, auth } from '../services/firebaseConfig';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export default function MyRequestsScreen() {
   const [myRequests, setMyRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Sadece mevcut kullanıcının ilanlarını filtrele
     const q = query(
       collection(db, "requests"), 
       where("userId", "==", auth.currentUser.uid)
@@ -17,18 +16,39 @@ export default function MyRequestsScreen() {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = [];
-      snapshot.forEach(doc => {
-        docs.push({ id: doc.id, ...doc.data() });
-      });
+      snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
       setMyRequests(docs);
-      setLoading(false);
-    }, (error) => {
-      console.error("Hata:", error);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
+
+  const handleDelete = (requestId) => {
+    Alert.alert(
+      "İsteği Kaldır",
+      "Bu yardım isteği çözüldü mü? Haritadan kaldırılacaktır.",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        { 
+          text: "Evet, Kaldır", 
+          onPress: async () => {
+            try {
+              // Seçenek A: Tamamen silmek istersen:
+              await deleteDoc(doc(db, "requests", requestId));
+              
+              // Seçenek B: Sadece pasife çekmek istersen (Arşiv için daha iyidir):
+              // await updateDoc(doc(db, "requests", requestId), { status: 'completed' });
+              
+              Alert.alert("Başarılı", "İstek kaldırıldı.");
+            } catch (error) {
+              Alert.alert("Hata", "İşlem başarısız: " + error.message);
+            }
+          } 
+        }
+      ]
+    );
+  };
 
   if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
 
@@ -43,8 +63,14 @@ export default function MyRequestsScreen() {
             title={item.title}
             description={item.description}
             left={props => <List.Icon {...props} icon="tools" />}
-            right={() => <Text style={styles.category}>{item.category}</Text>}
-            titleStyle={{ fontWeight: 'bold' }}
+            right={props => (
+              <IconButton
+                {...props}
+                icon="delete-outline"
+                iconColor="red"
+                onPress={() => handleDelete(item.id)}
+              />
+            )}
           />
         )}
         ListEmptyComponent={
@@ -57,6 +83,5 @@ export default function MyRequestsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  category: { alignSelf: 'center', marginRight: 15, fontSize: 12, color: '#666' },
   emptyText: { textAlign: 'center', marginTop: 50, color: 'gray' }
 });
